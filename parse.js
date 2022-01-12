@@ -17,9 +17,10 @@ const months = [
 ];
 
 class Parse {
-	constructor(fileName, month) {
+	constructor(fileName, month, year) {
 		this.fileName = fileName;
 		this.month = month.toUpperCase();
+		this.year = year;
 	}
 
 	async parse() {
@@ -42,6 +43,8 @@ class Parse {
 		let index = 0;
 		const days = [];
 
+		// Search through html until we find our first day of the week
+		// Store all days of the week for this schedule
 		for (let i = 0; i < go.length; i++) {
 			if (go[i] && !isNaN(go[i])) {
 				foundNum = true;
@@ -67,21 +70,19 @@ class Parse {
 			if (firstNameIndex + days.length + 1 > go.length) {
 				break;
 			}
-
-			const toPush = [];
 			let currentMonth = this.month;
-			//	console.log(days);
+			let currentYear = this.year;
 			for (let i = 0; i < days.length; i++) {
 				if (go[firstNameIndex + 1 + i]) {
-					const o = {};
-
 					const dateToPush = `${currentMonth}${days[i]}`;
 					if (outObject[dateToPush] === undefined) {
 						outObject[dateToPush] = {
-							stamp: `2021-${(months.indexOf(currentMonth) + 1).toLocaleString(
-								"en-US",
-								{ minimumIntegerDigits: 2, useGrouping: false }
-							)}-${days[i].toLocaleString("en-US", {
+							stamp: `${currentYear}-${(
+								months.indexOf(currentMonth) + 1
+							).toLocaleString("en-US", {
+								minimumIntegerDigits: 2,
+								useGrouping: false,
+							})}-${parseInt(days[i]).toLocaleString("en-US", {
 								minimumIntegerDigits: 2,
 								useGrouping: false,
 							})}`,
@@ -93,46 +94,35 @@ class Parse {
 						name: go[firstNameIndex],
 						time: go[firstNameIndex + 1 + i],
 					});
-
-					// o["work"] = {
-					// 	name: go[firstNameIndex],
-					// 	time: go[firstNameIndex + 1 + i],
-					// };
-					//o[days[i]] = go[firstNameIndex + 1 + i];
-					//	toPush.push(o);
 				}
 				const day = parseInt(days[i]);
+				// Check to see if we have switched to the next month
 				if (
 					day >
-					new Date(2021, months.indexOf(currentMonth)).monthDays() - 1
+					new Date(currentYear, months.indexOf(currentMonth)).monthDays() - 1
 				) {
 					const currMonthIndex = months.indexOf(currentMonth);
 					if (currMonthIndex + 1 > 11) {
+						// Switching from DECEMBER to JANUARY
 						currentMonth = months[0];
+						currentYear++;
 					} else {
 						currentMonth = months[currMonthIndex + 1];
 					}
 				}
 			}
-
-			//	outObject[go[firstNameIndex]] = toPush;
 			firstNameIndex = firstNameIndex + days.length + 1;
 		}
 
-		//console.log(outObject);
-
-		// fs.writeFileSync("./out.txt", JSON.stringify({ shifts: outObject }));
-
-		// for (let i = 0; i < outObject.people["LUCAS C"].length; i++) {
-		// 	if (outObject.people["LUCAS C"][i].work.day === "3") {
-		// 		console.log("yes");
-		// 	}
-		// }
-		// console.log(Object.keys(outObject.people["LUCAS C"]));
 		return outObject;
+	}
+
+	save(location, output) {
+		fs.writeFileSync(location, JSON.stringify({ shifts: output }));
 	}
 }
 
+// Get number of days for month
 Date.prototype.monthDays = function () {
 	var d = new Date(this.getFullYear(), this.getMonth() + 1, 0);
 	return d.getDate();
