@@ -1,5 +1,6 @@
 const EmlParser = require("eml-parser");
 const fs = require("fs");
+const { v4: uuidv4 } = require("uuid");
 
 const months = [
 	"JANUARY",
@@ -118,7 +119,10 @@ class Parse {
 	}
 
 	save(location, output) {
-		fs.writeFileSync(location, JSON.stringify({ shifts: output }));
+		fs.writeFileSync(
+			location,
+			JSON.stringify({ id: uuidv4(), shifts: output })
+		);
 	}
 }
 
